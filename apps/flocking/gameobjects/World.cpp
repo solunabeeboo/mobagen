@@ -22,11 +22,19 @@
 FlockingManager::FlockingManager(ecs::World& world, jobs::Scheduler& sched) : ecs_(world), sched_(sched) {}
 
 void FlockingManager::initializeRules() {
+<<<<<<< HEAD
   boidsRules.emplace_back(std::make_unique<SeparationRule>(25.f, 90.f));
   boidsRules.emplace_back(std::make_unique<CohesionRule>(300.f));
   boidsRules.emplace_back(std::make_unique<AlignmentRule>(1.0f));
   boidsRules.emplace_back(std::make_unique<MouseInfluenceRule>(2.f));
   boidsRules.emplace_back(std::make_unique<BoundedAreaRule>(20, 8.f, false));
+=======
+  boidsRules.emplace_back(std::make_unique<SeparationRule>(15.f, 300.f));
+  boidsRules.emplace_back(std::make_unique<CohesionRule>(300.f));
+  boidsRules.emplace_back(std::make_unique<AlignmentRule>(1.2f));
+  boidsRules.emplace_back(std::make_unique<MouseInfluenceRule>(20.f));
+  boidsRules.emplace_back(std::make_unique<BoundedAreaRule>(200, 800.f, false));
+>>>>>>> upstream/master
   boidsRules.emplace_back(std::make_unique<WindRule>(1.f, 6.f, false));
 
   defaultWeights.clear();
@@ -57,7 +65,7 @@ ecs::Entity FlockingManager::createBoid() {
   cfg.detectionRadius = detectionRadius;
   cfg.speed = desiredSpeed;
   cfg.hasConstantSpeed = hasConstantSpeed;
-  cfg.maxAcceleration = hasMaxAcceleration ? maxAcceleration : 10000.f;
+  cfg.maxAcceleration = hasMaxAcceleration ? maxAcceleration : 100000.f;
 
   BoidDebug& dbg = ecs_.add<BoidDebug>(e);
   dbg.drawDebugRadius = showRadius;
@@ -119,7 +127,7 @@ void FlockingManager::Update(float deltaTime) {
   if (ImGui::IsKeyDown(ImGuiKey_LeftArrow)) inputArrow.x -= 1.f;
   if (ImGui::IsKeyDown(ImGuiKey_RightArrow)) inputArrow.x += 1.f;
   if (glm::length(inputArrow) > 0.f) {
-    ecs_.get<BoidAcc>(boidEntities[0]).acc += inputArrow * 20.f;
+    ecs_.get<BoidAcc>(boidEntities[0]).acc += inputArrow * 1000.f;
     ecs_.get<BoidDebug>(boidEntities[0]).drawDebugRadius = true;
     ecs_.get<BoidDebug>(boidEntities[0]).color = Color::Red;
   }
