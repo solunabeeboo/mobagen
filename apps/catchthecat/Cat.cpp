@@ -2,10 +2,11 @@
 #include "World.h"
 #include <stdexcept>
 
-Point2D Cat::Move(CatWorld* world) {
-  auto rand = Random::Range(0, 5);
+Point2D Cat::IfMove(int direction, CatWorld* world)
+{
   auto pos = world->getCat();
-  switch (rand) {
+
+  switch (direction) {
     case 0:
       return CatWorld::NE(pos);
     case 1:
@@ -21,4 +22,21 @@ Point2D Cat::Move(CatWorld* world) {
     default:
       throw std::runtime_error("random out of range");
   }
+}
+
+Point2D Cat::Move(CatWorld* world) 
+{
+  auto pos = world->getCat();
+  Point2D prosPos;
+  auto rand = 0;
+
+  //wont ever lost to a bad move
+  do
+  {
+    rand = Random::Range(0, 5);
+    prosPos = IfMove(rand, world);
+
+  } while (pos == prosPos || world->getContent(prosPos));
+
+  return prosPos;
 }

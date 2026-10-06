@@ -7,7 +7,8 @@
 
 using namespace std;
 
-std::vector<Point2D> Agent::generatePath(CatWorld* w) {
+std::vector<Point2D> Agent::generatePath(CatWorld* w) 
+{
   unordered_map<Point2D, Point2D> cameFrom;  // to build the flowfield and build the path
   queue<Point2D> frontier;                   // to store next ones to visit
   unordered_set<Point2D> frontierSet;        // OPTIMIZATION to check faster if a point is in the queue
@@ -17,9 +18,11 @@ std::vector<Point2D> Agent::generatePath(CatWorld* w) {
   auto catPos = w->getCat();
   frontier.push(catPos);
   frontierSet.insert(catPos);
+
   Point2D borderExit = {INT32_MAX, INT32_MAX};  // sentinel: no border found yet
 
-  while (!frontier.empty()) {
+  while (!frontier.empty()) 
+  {
     // get the current from frontier
     // remove the current from frontierset
     // mark current as visited
