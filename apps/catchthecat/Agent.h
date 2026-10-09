@@ -29,7 +29,10 @@ namespace std
 
 class CatWorld;
 
-class Agent 
+int toIndex(Point2D p, int side);
+Point2D toPoint(int index, int side);
+
+class Agent
 {
 public:
   explicit Agent() = default;
@@ -39,6 +42,7 @@ public:
 
     std::vector<Point2D> generatePath(CatWorld* w);
     std::vector<Point2D> generatePath(CatWorld* w, Point2D extraBlock);
+    void flood(CatWorld* w, bool fromBorder, std::vector<int>& dist, std::vector<double>& ways);
 
 };
 

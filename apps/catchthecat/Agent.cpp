@@ -7,14 +7,14 @@
 
 using namespace std;
 
-static int toIndex(Point2D p, int side)
+int toIndex(Point2D p, int side)
 {
     int half = side / 2;
     //position into flat array
     return (p.y + half) * side + p.x + half;
 }
 
-static Point2D toPoint(int index, int side)
+Point2D toPoint(int index, int side)
 {
     int half = side / 2;
     //turn index into point
@@ -106,4 +106,71 @@ std::vector<Point2D> Agent::generatePath(CatWorld* w, Point2D potentialBlock)
 
 
     return path;
+}
+
+//emenate from starting point like BFS but trying to create enclosed shapes
+void Agent::flood(CatWorld* w, bool fromBorder, vector<int>& dist, vector<double>& ways)
+{
+    int side = w->getWorldSideSize();
+    int cells = side * side;
+
+    //dist is moves from the source; ways is how many shortest paths reach cell
+    dist.assign(cells, INT_MAX);
+    ways.assign(cells, 0.0);
+
+    static vector<int> frontier;
+    frontier.clear();
+    size_t head = 0;
+
+    //source open cell or cat
+    if (fromBorder)
+    {
+        for (int i = 0; i < cells; i++)
+        {
+            Point2D p = toPoint(i, side);
+
+            if (w->catWinsOnSpace(p) && !w->getContent(p))
+            {
+                dist[i] = 0;
+                ways[i] = 1.0;
+                frontier.push_back(i);
+            }
+        }
+    }
+    else
+    {
+        int start = toIndex(w->getCat(), side);
+        dist[start] = 0;
+        ways[start] = 1.0;
+        frontier.push_back(start);
+    }
+
+    while (head < frontier.size())
+    {
+        int current = frontier[head++];
+
+        Point2D pos = toPoint(current, side);
+
+        if (!fromBorder && w->catWinsOnSpace(pos))
+            continue;
+
+        Point2D next[6] = {CatWorld::NE(pos), CatWorld::NW(pos), CatWorld::E(pos), CatWorld::W(pos), CatWorld::SW(pos), CatWorld::SE(pos)};
+
+        for (const Point2D& n : next)
+        {
+            if (!w->isValidPosition(n) || w->getContent(n))
+                continue;
+
+            int ni = toIndex(n, side);
+
+            if (dist[ni] == INT_MAX)
+            {
+                dist[ni] = dist[current] + 1;
+                frontier.push_back(ni);
+            }
+
+            if (dist[ni] == dist[current] + 1)
+                ways[ni] += ways[current];
+        }
+    }
 }

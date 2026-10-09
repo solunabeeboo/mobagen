@@ -3,13 +3,27 @@
 #include <cstdlib>
 #include "World.h"
 
+using namespace std;
+
 Point2D Catcher::Move(CatWorld* world)
 {
     auto cat = world->getCat();
-    auto path = generatePath(world);
+    int side = world->getWorldSideSize();
+    int cells = side * side;
+
+    //static so the buffers get reused instead of reallocated every turn
+    static vector<int> catDist, borderDist;
+    static vector<double> catWays, borderWays;
+
+    //distance + shortest path count, from the cat and from the border
+    flood(world, false, catDist, catWays);
+    flood(world, true, borderDist, borderWays);
+
+    //cats current distance to the closest border
+    int shortest = borderDist[toIndex(cat, side)];
 
     //contingency, fill out around cat if no path found
-    if (path.empty())
+    if (shortest == INT_MAX)
     {
         for (auto n : CatWorld::neighbors(cat))
             if (!world->getContent(n))
@@ -18,47 +32,57 @@ Point2D Catcher::Move(CatWorld* world)
         return cat;
     }
 
-    //path not empty; find best position to block cat
-    int currentLength = static_cast<int>(path.size());
-    Point2D best = path.back();
+    static vector<int> ringSize;
+    ringSize.assign(shortest, 0);
+    for (int i = 0; i < cells; i++)
+        if (catDist[i] > 0 && catDist[i] < shortest)
+            ringSize[catDist[i]]++;
 
-    int bestLength = -1;
-    int bestDistance = INT_MAX;
+    //smallest ring we can finish before the cat reaches the border
+    int ring = -1;
+    for (int r = 1; r < shortest; r++)
+        if (ringSize[r] <= shortest - 1 && (ring == -1 || ringSize[r] <= ringSize[ring]))
+            ring = r;
 
-    //try each cell on cat path, block longest after or closest if equal length
-    for (int i = currentLength - 1; i >= 0; i--)
+    Point2D best = cat;
+    double bestThrough = -1.0;
+    int bestTouching = -1;
+
+    //pick the cell on the ring
+    for (int i = 0; i < cells; i++)
     {
-        Point2D p = path[i];
+        if (catDist[i] <= 0 || catDist[i] == INT_MAX || borderDist[i] == INT_MAX)
+            continue;
 
-        auto after = generatePath(world, p);
+        bool onPath = catDist[i] + borderDist[i] == shortest;
+        double through = onPath ? catWays[i] * borderWays[i] : 0.0;
 
-        int length = after.empty() ? INT_MAX : static_cast<int>(after.size());
-        int distance = abs(p.x - cat.x) + abs(p.y - cat.y);
+        if (ring != -1 ? catDist[i] != ring : !onPath)
+            continue;
 
-        if (length > bestLength || (length == bestLength && distance < bestDistance))
+        Point2D p = toPoint(i, side);
+
+        //blocked cells next to this one, on a tie prefer it so the ring stays connected
+        int touching = 0;
+        for (auto n : CatWorld::neighbors(p))
+            if (world->isValidPosition(n) && world->getContent(n))
+                touching++;
+
+        if (through > bestThrough || (through == bestThrough && touching > bestTouching))
         {
-            bestLength = length;
-            bestDistance = distance;
+            bestThrough = through;
+            bestTouching = touching;
             best = p;
         }
     }
 
-    if (bestLength > currentLength)
+    if (best != cat)
         return best;
 
-    //no block lengthens the path, so just crowd the cat
-    bestDistance = INT_MAX;
-
+    //nothing picked, just crowd the cat
     for (auto n : CatWorld::neighbors(cat))
-    {
-        int distance = abs(n.x - cat.x) + abs(n.y - cat.y);
+        if (!world->getContent(n))
+            return n;
 
-        if (!world->getContent(n) && distance < bestDistance)
-        {
-            bestDistance = distance;
-            best = n;
-        }
-    }
-
-    return best;
+    return cat;
 }
