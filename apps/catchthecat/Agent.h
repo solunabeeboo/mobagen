@@ -5,7 +5,7 @@
 #include <functional>
 #include <vector>
 
-// Point2D is now glm::ivec2 — same x,y interface, no OOP wrapper needed.
+// Point2D is now glm::ivec2 - same x,y interface, no OOP wrapper needed.
 using Point2D = glm::ivec2;
 
 // Hash specialization so Point2D (= glm::ivec2) works in unordered containers.
@@ -37,7 +37,8 @@ public:
 
   virtual Point2D Move(CatWorld*) = 0;
 
-  std::vector<Point2D> generatePath(CatWorld* w);
+    std::vector<Point2D> generatePath(CatWorld* w);
+    std::vector<Point2D> generatePath(CatWorld* w, Point2D extraBlock);
 
 };
 

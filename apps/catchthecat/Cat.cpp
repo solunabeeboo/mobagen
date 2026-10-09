@@ -26,17 +26,19 @@ Point2D Cat::IfMove(int direction, CatWorld* world)
 
 Point2D Cat::Move(CatWorld* world) 
 {
-  auto pos = world->getCat();
-  Point2D prosPos;
-  auto rand = 0;
+    //get best path
+    auto path = generatePath(world);
+    if (!path.empty())
+        return path.back();
 
-  //wont ever lost to a bad move
-  do
-  {
-    rand = Random::Range(0, 5);
-    prosPos = IfMove(rand, world);
+    //cant find path contingency, first avail
+    for (int i = 0; i < 6; i++)
+    {
+        auto p = IfMove(i, world);
+        if (!world->getContent(p))
+            return p;
+    }
 
-  } while (pos == prosPos || world->getContent(prosPos));
-
-  return prosPos;
+    //give up; no moves available
+    return world->getCat();
 }
